@@ -7,7 +7,7 @@ import glob
 import json
 import logging
 import torch
-from safetensors.torch import save_file, load_file
+import safetensors
 
 from nanochat.common import get_base_dir
 from nanochat.gpt import GPT, GPTConfig
@@ -45,7 +45,7 @@ def save_checkpoint(checkpoint_dir, step, model_data, optimizer_data, meta_data,
         os.makedirs(checkpoint_dir, exist_ok=True)
         # Save the model state parameters in safetensors format
         model_path = os.path.join(checkpoint_dir, f"model_{step:06d}.safetensors")
-        save_file(model_data, model_path)
+        safetensors.torch.save_file(model_data, model_path)
         logger.info(f"Saved model parameters to: {model_path}")
         # Save the metadata dict as json
         meta_path = os.path.join(checkpoint_dir, f"meta_{step:06d}.json")
@@ -63,16 +63,7 @@ def save_checkpoint(checkpoint_dir, step, model_data, optimizer_data, meta_data,
 def load_checkpoint(checkpoint_dir, step, device, load_optimizer=False, rank=0):
     # Load the model state in safetensors format
     model_path = os.path.join(checkpoint_dir, f"model_{step:06d}.safetensors")
-    if not os.path.exists(model_path):
-        # Fallback to .pt for old checkpoints
-        model_path_pt = os.path.join(checkpoint_dir, f"model_{step:06d}.pt")
-        if os.path.exists(model_path_pt):
-            model_data = torch.load(model_path_pt, map_location=device)
-        else:
-            raise FileNotFoundError(f"Checkpoint not found: {model_path} or {model_path_pt}")
-    else:
-        # safetensors load_file needs a string device
-        model_data = load_file(model_path, device=str(device))
+    model_data = safetensors.torch.load_file(model_path, device=str(device))
     # Load the optimizer state if requested
     optimizer_data = None
     if load_optimizer:
@@ -220,15 +211,10 @@ def upload_to_hf(checkpoint_dir, step, repo_id, token=None, with_optimizer=False
 
     # 1. Upload model and meta using standard names
     model_path = os.path.join(checkpoint_dir, f"model_{step:06d}.safetensors")
-    if not os.path.exists(model_path):
-        model_path = os.path.join(checkpoint_dir, f"model_{step:06d}.pt")
-
     meta_path = os.path.join(checkpoint_dir, f"meta_{step:06d}.json")
 
     if os.path.exists(model_path):
-        # We upload as model.safetensors or model.pt for standard compatibility
-        ext = ".safetensors" if model_path.endswith(".safetensors") else ".pt"
-        api.upload_file(path_or_fileobj=model_path, path_in_repo="model" + ext, repo_id=repo_id)
+        api.upload_file(path_or_fileobj=model_path, path_in_repo="model.safetensors", repo_id=repo_id)
     else:
         log0(f"Warning: model file not found at {model_path}")
 
