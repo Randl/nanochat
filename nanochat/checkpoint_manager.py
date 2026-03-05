@@ -192,3 +192,41 @@ def load_optimizer_state(source, device, rank, model_tag=None, step=None):
     log0(f"Loading optimizer state from {optimizer_path}")
     optimizer_data = torch.load(optimizer_path, map_location=device)
     return optimizer_data
+
+def upload_to_hf(checkpoint_dir, step, repo_id, token=None):
+    """Upload the model, metadata, and tokenizer to Hugging Face Hub."""
+    try:
+        from huggingface_hub import HfApi
+    except ImportError:
+        log0("Error: huggingface_hub not installed. Run 'pip install huggingface_hub'")
+        return
+
+    log0(f"Uploading model to Hugging Face Hub: {repo_id}")
+    api = HfApi(token=token)
+    api.create_repo(repo_id=repo_id, exist_ok=True)
+
+    # 1. Upload model and meta
+    model_filename = f"model_{step:06d}.pt"
+    meta_filename = f"meta_{step:06d}.json"
+    model_path = os.path.join(checkpoint_dir, model_filename)
+    meta_path = os.path.join(checkpoint_dir, meta_filename)
+
+    if os.path.exists(model_path):
+        api.upload_file(path_or_fileobj=model_path, path_in_repo=model_filename, repo_id=repo_id)
+        # Also upload as model.pt for convenience
+        api.upload_file(path_or_fileobj=model_path, path_in_repo="model.pt", repo_id=repo_id)
+    if os.path.exists(meta_path):
+        api.upload_file(path_or_fileobj=meta_path, path_in_repo=meta_filename, repo_id=repo_id)
+        # Also upload as meta.json for convenience
+        api.upload_file(path_or_fileobj=meta_path, path_in_repo="meta.json", repo_id=repo_id)
+
+    # 2. Upload tokenizer files
+    base_dir = get_base_dir()
+    tokenizer_dir = os.path.join(base_dir, "tokenizer")
+    if os.path.exists(tokenizer_dir):
+        for f in os.listdir(tokenizer_dir):
+            full_path = os.path.join(tokenizer_dir, f)
+            if os.path.isfile(full_path):
+                api.upload_file(path_or_fileobj=full_path, path_in_repo=f"tokenizer/{f}", repo_id=repo_id)
+
+    log0(f"Successfully uploaded model to https://huggingface.co/{repo_id}")
