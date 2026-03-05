@@ -7,7 +7,7 @@ import glob
 import json
 import logging
 import torch
-import safetensors
+import safetensors.torch
 
 from nanochat.common import get_base_dir
 from nanochat.gpt import GPT, GPTConfig
