@@ -67,6 +67,7 @@ parser.add_argument("--chatcore-max-sample", type=int, default=24, help="max pro
 parser.add_argument("--mmlu-epochs", type=int, default=3, help="number of epochs of MMLU in training mixture (teaches Multiple Choice)")
 parser.add_argument("--gsm8k-epochs", type=int, default=4, help="number of epochs of GSM8K in training mixture (teaches Math and Tool Use)")
 parser.add_argument("--hf-repo", type=str, default=None, help="Hugging Face repo ID to upload final model")
+parser.add_argument("--hf-upload-optim", action="store_true", help="upload optimizer state to Hugging Face")
 args = parser.parse_args()
 user_config = vars(args).copy()
 # -----------------------------------------------------------------------------
@@ -517,7 +518,8 @@ get_report().log(section="SFT", data=[
 
 # upload to huggingface
 if args.hf_repo and master_process:
-    upload_to_hf(checkpoint_dir, step, args.hf_repo) # in SFT step is not incremented at the end of loop when it breaks
+    upload_to_hf(checkpoint_dir, step, args.hf_repo, with_optimizer=args.hf_upload_optim)
+ # in SFT step is not incremented at the end of loop when it breaks
 
 # cleanup
 wandb_run.finish() # wandb run finish

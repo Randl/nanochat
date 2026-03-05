@@ -80,6 +80,7 @@ parser.add_argument("--save-every", type=int, default=-1, help="save checkpoints
 # Output
 parser.add_argument("--model-tag", type=str, default=None, help="override model tag for checkpoint directory name")
 parser.add_argument("--hf-repo", type=str, default=None, help="Hugging Face repo ID to upload final model")
+parser.add_argument("--hf-upload-optim", action="store_true", help="upload optimizer state to Hugging Face")
 args = parser.parse_args()
 user_config = vars(args).copy()  # for logging
 # -----------------------------------------------------------------------------
@@ -623,7 +624,7 @@ get_report().log(section="Base model training", data=[
 
 # upload to huggingface
 if args.hf_repo and master_process:
-    upload_to_hf(checkpoint_dir, step, args.hf_repo)
+    upload_to_hf(checkpoint_dir, step, args.hf_repo, with_optimizer=args.hf_upload_optim)
 
 # cleanup
 wandb_run.finish() # wandb run finish
