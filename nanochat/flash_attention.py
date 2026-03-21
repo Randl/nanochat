@@ -29,8 +29,11 @@ def _load_flash_attention_3():
         import os
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
         from kernels import get_kernel
-        return get_kernel("kernels-community/flash-attn4").flash_attn_interface
-    except Exception:
+        fa4 = get_kernel("kernels-community/flash-attn4")
+        print(fa4.__dict)
+        return fa4
+    except Exception as e:
+        print(f"Flash Attention load failed: {e}")
         return None
 
 
