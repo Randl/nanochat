@@ -7,6 +7,9 @@ requires-python = ">=3.10"
 dependencies = [
     "datasets>=4.0.0",
     "fastapi>=0.117.1",
+    "einops>=0.8.2",
+    "apache-tvm-ffi>=0.1.9",
+    "nvidia-cutlass-dsl>=4.4.2",
     "huggingface-hub>=1.5.0",
     "ipykernel>=7.1.0",
     "kernels>=0.11.7",
@@ -55,16 +58,16 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [project.optional-dependencies]
 cpu = [
-    "torch==2.9.1",
+    "torch==2.10.0",
 ]
 gpu = [
-    "torch==2.9.1",
+    "torch==2.10.0",
 ]
 
 [tool.uv]
