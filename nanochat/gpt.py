@@ -105,11 +105,11 @@ class CausalSelfAttention(nn.Module):
         # window_size is (left, right) tuple: (N, 0) for causal, (-1, 0) for full context
         if kv_cache is None:
             # Training: causal attention with optional sliding window
-            y = flash_attn.flash_attn_func(q, k, v, causal=True, window_size=window_size)
+            y, _ = flash_attn.flash_attn_func(q, k, v, causal=True, window_size=window_size)
         else:
             # Inference: use flash_attn_with_kvcache which handles cache management
             k_cache, v_cache = kv_cache.get_layer_cache(self.layer_idx)
-            y = flash_attn.flash_attn_with_kvcache(
+            y, _ = flash_attn.flash_attn_with_kvcache(
                 q, k_cache, v_cache,
                 k=k, v=v,
                 cache_seqlens=kv_cache.cache_seqlens,
