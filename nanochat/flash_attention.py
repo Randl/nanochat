@@ -28,10 +28,8 @@ def _load_flash_attention_3():
         major, _ = torch.cuda.get_device_capability()
         import os
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
-        from kernels import get_kernel
-        fa4 = get_kernel("kernels-community/flash-attn4")
-        print(fa4.__dict__)
-        return fa4
+        from flash_attn.cute import flash_attn_func as fa4_func
+        return fa4_func
     except Exception as e:
         print(f"Flash Attention load failed: {e}")
         return None
